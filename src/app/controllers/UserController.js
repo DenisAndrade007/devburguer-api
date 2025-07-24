@@ -20,22 +20,21 @@ class UserController {
 
       const { name, email, password, admin } = request.body;
       
-      // Corrige o valor booleano (para casos como admin="false")
-      const isAdmin = admin === true || admin === 'true';
+      // Correção do valor booleano
+      const isAdmin = admin === true || admin === 'true' || admin === '1';
 
       const userExists = await User.findOne({ where: { email } });
       if (userExists) {
         return response.status(400).json({ error: 'Email já cadastrado' });
       }
 
-      // Cria o hash da senha ANTES de criar o usuário
+      // Geração explícita do hash
       const password_hash = await bcrypt.hash(password, 8);
 
       const user = await User.create({
         name,
         email,
-        password,       // Campo virtual para validação
-        password_hash,  // Campo real com o hash
+        password_hash,
         admin: isAdmin
       });
 
