@@ -5,6 +5,8 @@ import authConfig from '../../config/auth';
 
 class SessionController {
   async store(request, response) {
+    console.log('Fazendo login...', request.body);
+
     const schema = Yup.object().shape({
       email: Yup.string()
         .email('Email inválido')
