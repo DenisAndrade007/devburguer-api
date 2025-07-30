@@ -9,7 +9,7 @@ class ProductController {
             name: Yup.string().required(),
             price: Yup.number().required(),
             category_id: Yup.number().required(),
-            offer: Yup.boolean()
+            offer: Yup.boolean().required()
         });
 
         try {
@@ -18,21 +18,21 @@ class ProductController {
             return response.status(400).json({ error: err.errors });
         }
 
-        const {admin: isAdmin} = await User.findByPk(request.userId);
-        if(!isAdmin) {
-            return response.status(401).json({error: 'User is not admin'});
+        const { admin: isAdmin } = await User.findByPk(request.userId);
+
+        if (!isAdmin) {
+            return response.status(401).json({ error: 'User is not admin' });
         }
 
-        const { filename: path } = request.file;
+        const {filename: path } = request.file;
         const { name, price, category_id, offer } = request.body;
 
-        // Correção: Usar um nome diferente para a variável do novo produto
         const product = await Product.create({
             name,
             price,
             category_id,
             path,
-            offer
+            offer,
         });
 
         return response.status(201).json(product);
@@ -52,55 +52,67 @@ class ProductController {
             return response.status(400).json({ error: err.errors });
         }
 
-        const {admin: isAdmin} = await User.findByPk(request.userId);
-        if(!isAdmin) {
-            return response.status(401).json({error: 'User is not admin'});
+        const { admin: isAdmin } = await User.findByPk(request.userId);
+
+        if (!isAdmin) {
+            return response.status(401).json({ error: 'User is not admin' });
         }
 
         const { id } = request.params;
 
-        const findProduct = await Product.findByPk(id);
-        if(!findProduct) {
-            return response.status(400).json({error: 'Make sure your product ID is correct'});
+        const findProduct = await Product.findByPk(id); 
+
+        if (!findProduct) {
+            return response.status(404).json({ error: 'Product not found' });
         }
 
         let path;
-        if(request.file) {
+        if (request.file) {
             path = request.file.filename;
-        }
+        } 
 
         const { name, price, category_id, offer } = request.body;
 
-        // Correção: Usar um nome diferente para a variável do novo produto
         await Product.update({
+            id,
             name,
             price,
             category_id,
             path,
-            offer
-        },
-        {
-        where: {
-            id
+            offer,
         }
-    });
-
-        return response.status(200).json();
+        , {
+            where: { id },
+        }
+    
+        );
+    
+        return response.status(200).json({ message: 'Product updated successfully' });
     }
 
 
     async index(request, response) {
         const products = await Product.findAll({
-           include: [
-            {
-                 model: Category, 
-                 as: 'category', 
-                 attributes: ['id', 'name']
-                }
-            ] 
-        });
-        return response.json(products);
+            include: [
+                {
+                    model: Category,
+                    as: 'category',
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'name'],
+                },
+            ],
+        }
+
+        );
+
+        return response.status(200).json(products);
     }
 }
 
 export default new ProductController();
+
+       

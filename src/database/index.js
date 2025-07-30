@@ -1,41 +1,30 @@
-import Sequelize from "sequelize";
-import mongoose from "mongoose";
-import configDatabase from "../config/database";
+import Sequelize from 'sequelize';
+import mongoose, { model } from 'mongoose';
+import configDatabase from '../config/database';
 
-import User from "../app/models/User";
-import Product from "../app/models/Product";
-import Category from "../app/models/Category";
+import User from '../app/models/User';
+import Product from '../app/models/Product';
+import Category from '../app/models/Category';
 
 const models = [User, Product, Category];
 
 class Database {
-    constructor() {
-        this.initSQL();
-        this.initMongo();
-    }
+  constructor() {
+    this.init();
+    this.mongo();
+  }
 
-    initSQL() {
-        this.connection = new Sequelize(configDatabase);
+  init(){
+    this.connection = new Sequelize(configDatabase);
+    models
+    .map((model) => model.init(this.connection))
+    .map((model) => model.associate && model.associate(this.connection.models));  
+  }
 
-        models.forEach((model) => {
-            model.init(this.connection);
-        });
-
-        models.forEach((model) => {
-            if (model.associate) {
-                model.associate(this.connection.models);
-            }
-        });
-    }
-
-    async initMongo() {
-        try {
-            await mongoose.connect("mongodb://localhost:27017/devburguer");
-            console.log("MongoDB conectado com sucesso.");
-        } catch (error) {
-            console.error("Erro ao conectar ao MongoDB:", error.message);
-        }
-    }
+  mongo(){
+    this.mongoConnection = mongoose.connect('mongodb://localhost:27017/devburger', {
+    });
+  }
 }
 
 export default new Database();

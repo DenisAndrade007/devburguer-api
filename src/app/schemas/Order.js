@@ -1,17 +1,21 @@
 import mongoose from "mongoose";
+import { type } from "os";
 
-const OrderSchema = new mongoose.Schema(
-  {
-    user: {
-      name: {
-        type: String,
-        required: true,
-      },
+const OrderSchema = new mongoose.Schema({
+  user:{
+    id: {
+      type:stringify,
+      required: true,
     },
+    name: {
+      type: String,
+      required: true,
+    }
+  },
     products: [
       {
         id: {
-          type: Number,
+          type: String,
           required: true,
         },
         name: {
@@ -28,22 +32,24 @@ const OrderSchema = new mongoose.Schema(
         },
         url: {
           type: String,
-          required: true,
+          required: true,  
         },
-        quantity: {
-          type: Number,
-          required: true,
-        },
+      quantity: {
+        type: Number,
+        required: true,
       },
+    }
     ],
+
     status: {
       type: String,
       required: true,
     },
-  },
-  {
-    timestamps: true,
+  }, 
+  { 
+    timestamps: true 
   }
-);
 
-export default mongoose.model("Order", OrderSchema);
+);
+  
+  export default mongoose.model("Order", OrderSchema);

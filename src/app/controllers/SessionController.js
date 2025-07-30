@@ -1,56 +1,54 @@
-import * as Yup from 'yup';
 import jwt from 'jsonwebtoken';
+import * as Yup from 'yup';
 import User from '../models/User';
 import authConfig from '../../config/auth';
 
 class SessionController {
   async store(request, response) {
-    console.log('Fazendo login...', request.body);
+    const schema = Yup.object({
+      email: Yup.string().email().required(),
+      password: Yup.string().min(6).required(),
+    })
 
-    const schema = Yup.object().shape({
-      email: Yup.string()
-        .email('Email inválido')
-        .required('Email é obrigatório'),
-      password: Yup.string()
-        .required('Senha é obrigatória')
+    const isValid = await schema.isValid(request.body);
+
+    const emailOrPasswordIncorrect = () => {
+      return response
+        .status(400)
+        .json({ error: 'Make sure your email or password are correct' });
+    };
+
+    if (!isValid) {
+      return emailOrPasswordIncorrect();
+    }
+
+    const { email, password } = request.body;
+
+    const user = await User.findOne({ 
+      where: { 
+        email 
+      } 
     });
 
-    try {
-      await schema.validate(request.body, { abortEarly: false });
-
-      const { email, password } = request.body;
-
-      const user = await User.findOne({ where: { email } });
-      if (!user) {
-        console.log(`Usuário não encontrado: ${email}`);
-        return response.status(401).json({ error: 'Credenciais inválidas' });
-      }
-
-      console.log(`Verificando senha para: ${email}`);
-      if (!(await user.checkPassword(password))) {
-        return response.status(401).json({ error: 'Credenciais inválidas' });
-      }
-
-      const { id, name, admin } = user;
-
-      const token = jwt.sign(
-        { id, admin },
-        authConfig.secret,
-        { expiresIn: authConfig.expiresIn }
-      );
-
-      return response.json({
-        user: { id, name, email, admin },
-        token
-      });
-
-    } catch (error) {
-      console.error('Erro no login:', error);
-      return response.status(400).json({
-        error: 'Erro de validação',
-        details: error.errors || [error.message]
-      });
+    if (!user) {
+      return emailOrPasswordIncorrect();
     }
+
+    const isSamePassword = awaituser.ckeckPassword(password);
+
+    if (isSamePassword)  {
+      return emailOrPasswordIncorrect();
+    }
+      
+      return response.status(201).json({
+        id: user.id,
+        name: user.name,
+        email,
+        admin: user.admin,
+        token: jwt.sign({ id: user.id, name: user.name }, authConfig.secret, {
+          expiresIn: authConfig.expiresIn,
+        }),
+      });
   }
 }
 

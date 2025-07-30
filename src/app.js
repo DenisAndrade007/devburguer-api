@@ -1,9 +1,9 @@
 import express from 'express';
+import routes from './routes';
 import cors from 'cors';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 
 import './database';
-import routes from './routes';
 
 class App {
   constructor() {
@@ -14,24 +14,20 @@ class App {
   }
 
   middlewares() {
-    this.app.use(cors());
-    this.app.use(express.json());
-
-    // Servindo arquivos estáticos da pasta uploads
+    this.app.use(express.json ());
     this.app.use(
       '/product-file',
       express.static(resolve(__dirname, '..', 'uploads'))
-    );
+    )
 
     this.app.use(
       '/category-file',
       express.static(resolve(__dirname, '..', 'uploads'))
-    );
+    )
   }
-
   routes() {
     this.app.use(routes);
   }
 }
 
-export default App;
+export default new App().app;

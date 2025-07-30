@@ -1,25 +1,32 @@
 import jwt from 'jsonwebtoken';
 import authConfig from '../../config/auth';
 
-export default (request, response, next) => {
-  const authHeader = request.headers.authorization;
 
-  if (!authHeader) {
-    console.log('Acesso negado: Token não fornecido');
+
+function authMiddleware (request, response, next) {
+  const authToken = request.headers.authorization;
+
+  if (!authToken) {
     return response.status(401).json({ error: 'Token não fornecido' });
   }
 
-  const [, token] = authHeader.split(' ');
+  const token = authToken.split(' ').at(1);
 
   try {
-    const decoded = jwt.verify(token, authConfig.secret);
-    
-    request.userId = decoded.id;
-    request.userAdmin = decoded.admin;
-    
-    return next();
-  } catch (error) {
-    console.log('Token inválido:', error);
+    jwt.verify(token, authConfig.secret, (err, decoded) => {
+      if (err) {
+        throw new Error();
+      }
+      request.userId = decoded.id;
+      request.userName = decoded.name;
+    });
+  } catch (err) {
     return response.status(401).json({ error: 'Token inválido' });
   }
-};
+    
+    return next();
+
+  } 
+
+
+export default authMiddleware;
