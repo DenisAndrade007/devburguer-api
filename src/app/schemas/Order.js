@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
-import { type } from "os";
 
 const OrderSchema = new mongoose.Schema({
   user:{
     id: {
-      type:stringify,
+      type:String,
       required: true,
     },
     name: {

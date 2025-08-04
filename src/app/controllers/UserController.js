@@ -1,51 +1,41 @@
-import { v4 } from 'uuid';
-import * as Yup from 'yup';
-
 import User from '../models/User';
 
 class UserController {
-  async store(request, response) {
-    const schema = Yup.object({
-      name: Yup.string().required(),
-      email: Yup.string().email().required(),
-      password: Yup.string().min(6).required(),
-      admin: Yup.boolean(),
-    })
-
+  async store(req, res) {
     try {
-      schema.validateSync(request.body, { abortEarly: false });
-    } catch (err) {
-      return response.status(400).json({ error: err.errors });
+      const { name, email, password } = req.body;
+
+      console.log(req.body); // Verifique os dados recebidos
+
+      // Verifique se a senha é válida
+      if (!password || password.length < 6) {
+        return res.status(400).json({ 
+          error: 'Senha é obrigatória e deve ter no mínimo 6 caracteres' 
+        });
+      }
+
+      // Verifique se o usuário já existe
+      const userExists = await User.findOne({ where: { email } });
+      if (userExists) {
+        return res.status(400).json({ error: 'Usuário já existe' });
+      }
+
+      // Crie o usuário usando o método create, que chamará o hook
+      const user = await User.create({ name, email, password });
+
+      return res.status(201).json({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        is_active: user.is_active
+      });
+
+    } catch (error) {
+      console.error('[ERROR] UserController.store:', error);
+      return res.status(500).json({ 
+        error: error.message || 'Erro ao criar usuário' 
+      });
     }
-    
-    const { name, email, password, admin } = request.body;
-
-    const userExists = await User.findOne({
-      where: { 
-        email 
-      } 
-    });
-
-    if (userExists) {
-      return response.status(400).json({ error: 'User already exists' });
-    }
-
-
-    const user = await User.create({
-      id: v4(),
-      name,
-      email,
-      password,
-      admin,
-    });
-
-    return response.status(201).json({
-      id: user.id,
-      name,
-      email,
-      admin,
-      
-    });
   }
 }
 

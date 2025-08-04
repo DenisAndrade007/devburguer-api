@@ -1,43 +1,34 @@
-/** @type {import('sequelize-cli').Migration} */
+'use strict';
 
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('users', {
-      id: {
-        primaryKey: true,
-        allowNull: false,
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4
-      },
-      name: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      email: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true
-      },
-      password_hash: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      admin: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false
-      },
-      created_at: {
-        type: Sequelize.DATE,
-        allowNull: false
-      },
-      updated_at: {
-        type: Sequelize.DATE,
-        allowNull: false
-      }
+  async up(queryInterface, Sequelize) {
+    // Corrige registros existentes
+    await queryInterface.sequelize.query(`
+      UPDATE users SET password_hash = '' 
+      WHERE password_hash IS NULL;
+    `);
+
+    // Altera a coluna para NOT NULL
+    await queryInterface.changeColumn('users', 'password_hash', {
+      type: Sequelize.STRING,
+      allowNull: false
     });
+
+    // Adiciona deleted_at se não existir
+    const tableInfo = await queryInterface.describeTable('users');
+    if (!tableInfo.deleted_at) {
+      await queryInterface.addColumn('users', 'deleted_at', {
+        type: Sequelize.DATE,
+        allowNull: true
+      });
+    }
   },
 
- async down (queryInterface)  {
-    await queryInterface.dropTable('users');
+  async down(queryInterface) {
+    // Reversão opcional (não recomendado em produção)
+    await queryInterface.changeColumn('users', 'password_hash', {
+      type: Sequelize.STRING,
+      allowNull: true
+    });
   }
 };
